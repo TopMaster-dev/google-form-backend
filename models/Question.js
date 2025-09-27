@@ -17,7 +17,8 @@ const Question = sequelize.define("Question", {
             "time",
             "file_upload",
             "image",
-            "image_upload"
+            "image_upload",
+            "section"
         ),
         allowNull: false
     },
