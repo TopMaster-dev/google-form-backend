@@ -6,6 +6,7 @@ const path = require("path");
 const authRoutes = require("./routes/authRoutes");
 const formRoutes = require("./routes/formRoutes");
 const responseRoutes = require("./routes/responseRoutes");
+const categoryResponse = require("./routes/categoryResponse");
 
 require("dotenv").config();
 const app = express();
@@ -29,6 +30,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/forms", formRoutes);
 app.use("/api/forms", responseRoutes);
 app.use('/api/upload', formRoutes);
+app.use('/api/category', categoryResponse);
 
 
 sequelize

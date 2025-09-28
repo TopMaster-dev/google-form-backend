@@ -4,15 +4,11 @@ const Form = require("./Form");
 const Question = require("./Question");
 const Response = require("./Response");
 const Answer = require("./Answer");
-const Category = require("./Category");
 
 // Associations
 // User ↔ Form
 User.hasMany(Form, { foreignKey: "created_by", onDelete: "CASCADE" });
 Form.belongsTo(User, { foreignKey: "created_by" });
-
-Category.hasMany(Form, { foreignKey: "category_id", onDelete: "CASCADE" });
-Form.belongsTo(Category, { foreignKey: "category_id" });
 
 // Form ↔ Question
 Form.hasMany(Question, { foreignKey: "form_id", onDelete: "CASCADE" });
@@ -34,4 +30,4 @@ Answer.belongsTo(Response, { foreignKey: "response_id" });
 Question.hasMany(Answer, { foreignKey: "question_id", onDelete: "CASCADE" });
 Answer.belongsTo(Question, { foreignKey: "question_id" });
 
-module.exports = { sequelize, User, Form, Question, Response, Answer, Category };
+module.exports = { sequelize, User, Form, Question, Response, Answer };

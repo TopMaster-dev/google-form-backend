@@ -54,9 +54,3 @@ CREATE TABLE answers (
   FOREIGN KEY (response_id) REFERENCES responses(id) ON DELETE CASCADE,
   FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
 );
-
--- Categories table
-CREATE TABLE categories (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  title VARCHAR(255) NOT NULL
-);

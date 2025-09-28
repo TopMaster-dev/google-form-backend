@@ -9,6 +9,7 @@ const Form = sequelize.define("Form", {
     created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     allow_multiple_responses: { type: DataTypes.BOOLEAN, defaultValue: true },
     require_email: { type: DataTypes.BOOLEAN, defaultValue: false },
+    category_id : { type: DataTypes.TEXT, defaultValue: "0"}
 }, {
     tableName: "forms",
     timestamps: false,  // since we already have created_at in SQL

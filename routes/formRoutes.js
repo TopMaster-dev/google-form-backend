@@ -133,12 +133,13 @@ router.post("/", auth, async (req, res) => {
         if (req.user.role !== "admin")
             return res.status(403).json({ message: "Forbidden" });
 
-        const { title, description, fields } = req.body;
+        const { title, description, fields, category_id } = req.body;
 
         const form = await Form.create({
             title,
             description,
-            created_by: req.user.id   // match your schema
+            created_by: req.user.id,   // match your schema
+            category_id
         });
 
         console.log("Creating form with fields:", fields);
@@ -200,6 +201,7 @@ router.post("/", auth, async (req, res) => {
                     adminImages: parseJSON(q.admin_images),
                     enableAdminImages: q.enable_admin_images || false,
                 })),
+                category_id: createdForm.category_id
             },
         });
     } catch (err) {
@@ -291,6 +293,7 @@ router.get("/:id", auth, async (req, res) => {
                 id: form.id,
                 title: form.title,
                 description: form.description,
+                category_id: form.category_id,
                 fields: form.Questions.map((q) => ({
                     id: q.id,
                     label: q.question_text,
@@ -328,11 +331,12 @@ router.put("/:id", auth, async (req, res) => {
         if (req.user.role !== "admin")
             return res.status(403).json({ message: "Forbidden" });
 
-        const { title, description, fields } = req.body;
+        const { title, description, fields, category_id } = req.body;
         const form = await Form.findByPk(req.params.id);
         if (!form) return res.status(404).json({ message: "Form not found" });
 
         form.title = title || form.title;
+        form.category_id = category_id || form.category_id;
         form.description = description || form.description;
         await form.save();
 
@@ -376,6 +380,7 @@ router.put("/:id", auth, async (req, res) => {
                 id: updatedForm.id,
                 title: updatedForm.title,
                 description: updatedForm.description,
+                category_id: updatedForm.category_id,
                 fields: updatedForm.Questions.map((q) => ({
                     id: q.id,
                     label: q.question_text,
