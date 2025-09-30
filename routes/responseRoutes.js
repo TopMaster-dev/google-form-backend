@@ -49,6 +49,7 @@ router.post("/:formId/responses", upload.any(), async (req, res) => {
     try {
         const { formId } = req.params;
         const { answers, email } = req.body;
+        const { userId, userEmail } = req.body;
 
         console.log("=== Backend Debug Info ===");
         console.log("req.body:", req.body);
@@ -107,8 +108,8 @@ router.post("/:formId/responses", upload.any(), async (req, res) => {
         // Create response entry
         const response = await Response.create({
             form_id: formId,
-            user_id: req.user?.id || null,
-            respondent_email: email || null,
+            user_id: userId || null,
+            respondent_email: userEmail || null,
             ip_address: ipAddress
         });
 
@@ -297,35 +298,67 @@ router.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 router.get("/:formId/responses", auth, async (req, res) => {
     try {
         const { formId } = req.params;
+        let responses;
 
-        // Check permission
-        const form = await Form.findByPk(formId);
-        if (!form) return res.status(404).json({ message: "フォームが見つかりませんでした" });
-        if (req.user.id !== form.created_by && req.user.role !== "admin") {
-            return res.status(403).json({ message: "許可されていません" });
+        if (formId === "0" || formId === 0) {
+            // Get all responses (admin/global view)
+            responses = await Response.findAll({
+                include: [
+                    {
+                        model: Answer,
+                        include: [
+                            {
+                                model: Question,
+                                attributes: ['question_text', 'question_type', 'options']
+                            }
+                        ]
+                    },
+                    {
+                        model: User,
+                        attributes: ['id', 'name', 'email'],
+                        required: false
+                    },
+                    {
+                        model: Form,
+                        attributes: ['id', 'title', 'description'],
+                        required: false
+                    },
+                ],
+                order: [['submitted_at', 'DESC']]
+            });
+        } else {
+            const form = formId ? await Form.findByPk(formId) : null;
+            if (!form) return res.status(404).json({ message: "フォームが見つかりませんでした" });
+            if (req.user.id !== form.created_by && req.user.role !== "admin") {
+                return res.status(403).json({ message: "許可されていません" });
+            }
+
+            responses = await Response.findAll({
+                where: { form_id: formId },
+                include: [
+                    {
+                        model: Answer,
+                        include: [
+                            {
+                                model: Question,
+                                attributes: ['question_text', 'question_type', 'options']
+                            }
+                        ]
+                    },
+                    {
+                        model: User,
+                        attributes: ['id', 'name', 'email'],
+                        required: false
+                    },
+                    {
+                        model: Form,
+                        attributes: ['id', 'title', 'description'],
+                        required: false
+                    },
+                ],
+                order: [['submitted_at', 'DESC']]
+            });
         }
-
-        // Fetch responses with answers
-        const responses = await Response.findAll({
-            where: { form_id: formId },
-            include: [
-                {
-                    model: Answer,
-                    include: [
-                        {
-                            model: Question,
-                            attributes: ['question_text', 'question_type', 'options']
-                        }
-                    ]
-                },
-                {
-                    model: User,
-                    attributes: ['id', 'name', 'email'],
-                    required: false
-                }
-            ],
-            order: [['submitted_at', 'DESC']]
-        });
 
         const formattedResponses = responses.map(r => ({
             id: r.id,
@@ -333,19 +366,19 @@ router.get("/:formId/responses", auth, async (req, res) => {
             respondent: r.User
                 ? { name: r.User.name, email: r.User.email }
                 : { name: 'Anonymous', email: r.respondent_email || 'N/A' },
-            answers: r.Answers.map(a => {
-                // Map each type of answer correctly
-                return {
-                    question: a.Question?.question_text,
-                    type: a.Question?.question_type,
-                    answerText: a.answer_text || null,
-                    imageUrls: a.image_urls ? JSON.parse(a.image_urls) : null,
-                    files: a.file_paths ? JSON.parse(a.file_paths) : null,
-                    checkboxSelections: a.selected_options ? JSON.parse(a.selected_options) : null,
-                    multipleChoiceSelection: a.selected_choices ? JSON.parse(a.selected_choices) : null,
-                    imageResponses: a.image_responses ? JSON.parse(a.image_responses) : null
-                };
-            })
+            answers: (r.Answers || []).map(a => ({
+                question: a.Question?.question_text,
+                type: a.Question?.question_type,
+                answerText: a.answer_text || null,
+                imageUrls: a.image_urls ? JSON.parse(a.image_urls) : null,
+                files: a.file_paths ? JSON.parse(a.file_paths) : null,
+                checkboxSelections: a.selected_options ? JSON.parse(a.selected_options) : null,
+                multipleChoiceSelection: a.selected_choices ? JSON.parse(a.selected_choices) : null,
+                imageResponses: a.image_responses ? JSON.parse(a.image_responses) : null
+            })),
+            form: r.Form
+                ?{ title: r.Form.title, description: r.Form.description }
+                :{ title: '無題のフォーム', email: 'フォームの説明' }
         }));
 
         return res.json(formattedResponses);
