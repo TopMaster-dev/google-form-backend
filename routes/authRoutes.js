@@ -14,11 +14,11 @@ router.post("/register", async (req, res) => {
         // Validate required fields
         if (!name || !email || !password) {
             return res.status(400).json({
-                message: "Missing required fields",
+                message: "必須項目が不足しています",
                 details: {
-                    name: !name ? "Name is required" : null,
-                    email: !email ? "Email is required" : null,
-                    password: !password ? "Password is required" : null
+                    name: !name ? "名前は必須です" : null,
+                    email: !email ? "メールアドレスは必須です" : null,
+                    password: !password ? "パスワードは必須です" : null
                 }
             });
         }
@@ -26,11 +26,11 @@ router.post("/register", async (req, res) => {
         // Validate email format
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return res.status(400).json({ message: "Invalid email format" });
+            return res.status(400).json({ message: "メールアドレスの形式が正しくありません" });
         }
 
         const existing = await User.findOne({ where: { email } });
-        if (existing) return res.status(400).json({ message: "User already exists" });
+        if (existing) return res.status(400).json({ message: "既に登録されているユーザーです" });
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -47,7 +47,7 @@ router.post("/register", async (req, res) => {
             { expiresIn: "7d" }
         );
 
-        return res.json({ message: "User registered successfully", user, token });
+        return res.json({ message: "ユーザー登録が完了しました", user, token });
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }
@@ -59,12 +59,12 @@ router.post("/login", async (req, res) => {
         const { email, password } = req.body;
 
         const user = await User.findOne({ where: { email } });
-        if (!user) return res.status(404).json({ message: "User not found" });
+        if (!user) return res.status(404).json({ message: "ユーザーが見つかりません" });
 
         console.log(password, user.password);
         const isMatch = await bcrypt.compare(password, user.password);
         console.log(isMatch);
-        if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+        if (!isMatch) return res.status(400).json({ message: "メールアドレスまたはパスワードが正しくありません" });
 
         const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },

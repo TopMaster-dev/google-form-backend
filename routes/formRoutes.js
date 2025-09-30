@@ -117,7 +117,7 @@ router.delete("/image", async (req, res) => {
 
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
-            res.json({ success: true, message: 'File deleted successfully' });
+            res.json({ success: true, message: 'ファイルが正常に削除されました' });
         } else {
             res.status(404).json({ error: 'File not found' });
         }
@@ -131,7 +131,7 @@ router.delete("/image", async (req, res) => {
 router.post("/", auth, async (req, res) => {
     try {
         if (req.user.role !== "admin")
-            return res.status(403).json({ message: "Forbidden" });
+            return res.status(403).json({ message: "許可されていません" });
 
         const { title, description, fields, category_id } = req.body;
 
@@ -220,7 +220,7 @@ router.get("/:formId/public", async (req, res) => {
         });
 
         if (!form) {
-            return res.status(404).json({ message: "Form not found" });
+            return res.status(404).json({ message: "フォームが見つかりません" });
         }
 
         // Fix: Directly return the response, don't assign to variable
@@ -246,7 +246,7 @@ router.get("/:formId/public", async (req, res) => {
         });
     } catch (err) {
         console.error("Error fetching public form:", err);
-        return res.status(500).json({ message: "Internal server error" });
+        return res.status(500).json({ message: "サーバー内部でエラーが発生しました" });
     }
 });
 
@@ -286,7 +286,7 @@ router.get("/", auth, async (req, res) => {
 router.get("/:id", auth, async (req, res) => {
     try {
         const form = await Form.findByPk(req.params.id, { include: Question });
-        if (!form) return res.status(404).json({ message: "Form not found" });
+        if (!form) return res.status(404).json({ message: "フォームが見つかりませんでした" });
 
         return res.json({
             form: {
@@ -329,11 +329,11 @@ router.get("/:id", auth, async (req, res) => {
 router.put("/:id", auth, async (req, res) => {
     try {
         if (req.user.role !== "admin")
-            return res.status(403).json({ message: "Forbidden" });
+            return res.status(403).json({ message: "許可されていません" });
 
         const { title, description, fields, category_id } = req.body;
         const form = await Form.findByPk(req.params.id);
-        if (!form) return res.status(404).json({ message: "Form not found" });
+        if (!form) return res.status(404).json({ message: "フォームが見つかりませんでした" });
 
         form.title = title || form.title;
         form.category_id = category_id || form.category_id;
@@ -414,13 +414,13 @@ router.put("/:id", auth, async (req, res) => {
 // Delete Form
 router.delete("/:id", auth, async (req, res) => {
     try {
-        if (req.user.role !== "admin") return res.status(403).json({ message: "Forbidden" });
+        if (req.user.role !== "admin") return res.status(403).json({ message: "許可されていません" });
 
         const form = await Form.findByPk(req.params.id);
-        if (!form) return res.status(404).json({ message: "Form not found" });
+        if (!form) return res.status(404).json({ message: "フォームが見つかりませんでした" });
 
         await form.destroy();
-        return res.json({ message: "Form deleted successfully" });
+        return res.json({ message: "フォームが正常に削除されました" });
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }

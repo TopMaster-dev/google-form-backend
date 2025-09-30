@@ -64,7 +64,7 @@ router.post("/:formId/responses", upload.any(), async (req, res) => {
         // Get form details
         const form = await Form.findByPk(formId);
         if (!form) {
-            return res.status(404).json({ message: "Form not found" });
+            return res.status(404).json({ message: "フォームが見つかりません" });
         }
 
         // Check for multiple submissions if not allowed
@@ -72,7 +72,7 @@ router.post("/:formId/responses", upload.any(), async (req, res) => {
             if (form.require_email) {
                 if (!email) {
                     return res.status(400).json({
-                        message: "Email is required for this form"
+                        message: "このフォームにはメールアドレスが必要です"
                     });
                 }
 
@@ -85,7 +85,7 @@ router.post("/:formId/responses", upload.any(), async (req, res) => {
 
                 if (existingResponseByEmail) {
                     return res.status(403).json({
-                        message: "You have already submitted this form"
+                        message: "このフォームはすでに送信されています"
                     });
                 }
             }
@@ -99,7 +99,7 @@ router.post("/:formId/responses", upload.any(), async (req, res) => {
 
             if (existingResponseByIP) {
                 return res.status(403).json({
-                    message: "Multiple submissions are not allowed for this form"
+                    message: "このフォームでは複数回の送信はできません"
                 });
             }
         }
@@ -195,7 +195,7 @@ router.post("/:formId/responses", upload.any(), async (req, res) => {
         console.log(`Total answers processed: ${processedAnswers.length}`);
 
         return res.status(201).json({
-            message: "Response submitted successfully",
+            message: "回答が正常に送信されました",
             response: {
                 id: response.id,
                 formId: formId,
@@ -300,9 +300,9 @@ router.get("/:formId/responses", auth, async (req, res) => {
 
         // Check permission
         const form = await Form.findByPk(formId);
-        if (!form) return res.status(404).json({ message: "Form not found" });
+        if (!form) return res.status(404).json({ message: "フォームが見つかりませんでした" });
         if (req.user.id !== form.created_by && req.user.role !== "admin") {
-            return res.status(403).json({ message: "Forbidden" });
+            return res.status(403).json({ message: "許可されていません" });
         }
 
         // Fetch responses with answers
@@ -363,11 +363,11 @@ router.get("/:formId/csv", auth, async (req, res) => {
         // Check permissions
         const form = await Form.findByPk(formId);
         if (!form) {
-            return res.status(404).json({ message: "Form not found" });
+            return res.status(404).json({ message: "フォームが見つかりませんでした" });
         }
 
         if (req.user.id !== form.created_by && req.user.role !== "admin") {
-            return res.status(403).json({ message: "Forbidden" });
+            return res.status(403).json({ message: "許可されていません" });
         }
 
         // Get all responses
