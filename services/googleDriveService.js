@@ -4,32 +4,55 @@ const path = require('path');
 
 class GoogleDriveService {
     constructor() {
-        // Initialize the OAuth2 client
-        this.oauth2Client = new google.auth.OAuth2(
-            process.env.GOOGLE_CLIENT_ID,
-            process.env.GOOGLE_CLIENT_SECRET,
-            process.env.GOOGLE_REDIRECT_URI
-        );
+        // Prefer Service Account key (JSON) if provided; fallback to OAuth2 + refresh token
+        let keyFilePath = process.env.GOOGLE_SERVICE_ACCOUNT_KEY || process.env.GOOGLE_APPLICATION_CREDENTIALS;
+        const inlineKeyJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
 
-        // Set credentials using refresh token
-        const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
-        if (!refreshToken) {
-            console.error('GOOGLE_REFRESH_TOKEN is not set in environment variables');
-            throw new Error('Google Drive refresh token is not configured');
+        // Fallback: look for a local key file in project root (backend)
+        if (!keyFilePath && !inlineKeyJson) {
+            const defaultKeyPath = path.join(__dirname, '..', 'google-drive-key.json');
+            if (fs.existsSync(defaultKeyPath)) {
+                keyFilePath = defaultKeyPath;
+                console.log('Using local Google Drive key file at', keyFilePath);
+            }
         }
 
-        this.oauth2Client.setCredentials({
-            refresh_token: refreshToken
-        });
+        if (keyFilePath || inlineKeyJson) {
+            let authConfig;
+            if (inlineKeyJson) {
+                // Write inline JSON to a temp file once per process
+                const tmpPath = path.join(process.cwd(), '.gdrive_sa_key.tmp.json');
+                if (!fs.existsSync(tmpPath)) {
+                    fs.writeFileSync(tmpPath, inlineKeyJson, { encoding: 'utf8' });
+                }
+                authConfig = { keyFile: tmpPath };
+            } else {
+                authConfig = { keyFile: keyFilePath };
+            }
 
-        // Initialize the drive client
-        this.drive = google.drive({
-            version: 'v3',
-            auth: this.oauth2Client
-        });
+            const scopes = ['https://www.googleapis.com/auth/drive.file'];
+            this.auth = new google.auth.GoogleAuth({ ...authConfig, scopes });
+            this.drive = google.drive({ version: 'v3', auth: this.auth });
+        } else {
+            // Initialize the OAuth2 client using refresh token flow
+            this.oauth2Client = new google.auth.OAuth2(
+                process.env.GOOGLE_CLIENT_ID,
+                process.env.GOOGLE_CLIENT_SECRET,
+                process.env.GOOGLE_REDIRECT_URI
+            );
+
+            const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+            if (!refreshToken) {
+                console.error('Neither service account key nor GOOGLE_REFRESH_TOKEN provided');
+                throw new Error('Google Drive auth is not configured');
+            }
+
+            this.oauth2Client.setCredentials({ refresh_token: refreshToken });
+            this.drive = google.drive({ version: 'v3', auth: this.oauth2Client });
+        }
 
         // Verify root folder exists
-        const rootFolderId = process.env.GOOGLE_DRIVE_ROOT_FOLDER;
+        const rootFolderId = 'google-drive';
         if (!rootFolderId) {
             console.error('GOOGLE_DRIVE_ROOT_FOLDER is not set in environment variables');
             throw new Error('Google Drive root folder is not configured');

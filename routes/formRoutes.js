@@ -94,7 +94,6 @@ router.post("/images", upload.array('images', 10), async (req, res) => {
             fileName: file.filename
         }));
 
-        console.log("Files uploaded successfully:", filePaths);
         res.json({
             success: true,
             files: filePaths
@@ -142,7 +141,6 @@ router.post("/", auth, async (req, res) => {
             category_id
         });
 
-        console.log("Creating form with fields:", fields);
         if (fields && fields.length > 0) {
             for (const field of fields) {
                 await Question.create({
@@ -254,7 +252,6 @@ router.get("/:formId/public", async (req, res) => {
 // Get All Forms
 router.get("/", auth, async (req, res) => {
     try {
-        console.log('Fetching forms for user:', req.user.id);
         const query = {
             include: [Question],
             order: [['created_at', 'DESC']]
@@ -265,7 +262,6 @@ router.get("/", auth, async (req, res) => {
             query.where = { created_by: req.user.id };
         }
         const forms = await Form.findAll(query);
-        console.log('Found forms:', forms.length);
 
         return res.json({
             forms: forms.map(f => ({

@@ -4,6 +4,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const { Response, Form, Question, Answer, User } = require("../models");
+const GoogleDriveService = require('../services/googleDriveService');
 
 const router = express.Router();
 
@@ -51,16 +52,8 @@ router.post("/:formId/responses", upload.any(), async (req, res) => {
         const { answers, email } = req.body;
         const { userId, userEmail } = req.body;
 
-        console.log("=== Backend Debug Info ===");
-        console.log("req.body:", req.body);
-        console.log("req.files:", req.files);
-        console.log("Raw answers:", answers);
-        console.log("============================");
-
         const parsedAnswers = JSON.parse(answers || '[]');
         const ipAddress = req.ip || req.connection.remoteAddress;
-
-        console.log("Parsed answers: ", parsedAnswers);
 
         // Get form details
         const form = await Form.findByPk(formId);
@@ -116,8 +109,12 @@ router.post("/:formId/responses", upload.any(), async (req, res) => {
         // Process uploaded files
         const uploadedFiles = req.files || [];
         const processedAnswers = [];
-
-        console.log("Processing answers:", parsedAnswers.length);
+        let drive;
+        try {
+            drive = new GoogleDriveService();
+        } catch (e) {
+            console.warn('Google Drive not configured. Files will be stored locally only.');
+        }
 
         for (const answer of parsedAnswers) {
             try {
@@ -126,8 +123,6 @@ router.post("/:formId/responses", upload.any(), async (req, res) => {
                     console.error(`Question not found: ${answer.fieldUid}`);
                     continue;
                 }
-
-                console.log(`Processing answer for question ${answer.fieldUid}, type: ${answer.type}`);
 
                 let answerData = {
                     response_id: response.id,
@@ -146,14 +141,26 @@ router.post("/:formId/responses", upload.any(), async (req, res) => {
                         file.fieldname.startsWith(`image_${answer.fieldUid}_`)
                     );
 
-                    console.log(`Found ${questionFiles.length} image files for question ${answer.fieldUid}`);
-
                     if (questionFiles.length > 0) {
-                        const fileUrls = questionFiles.map(f => `/uploads/${f.filename}`);
-                        const filePaths = questionFiles.map(f => f.path);
+                        const localUrls = questionFiles.map(f => `/uploads/${f.filename}`);
+                        const localPaths = questionFiles.map(f => f.path);
 
-                        answerData.image_urls = JSON.stringify(fileUrls);
-                        answerData.image_paths = JSON.stringify(filePaths);
+                        let driveLinks = [];
+                        if (drive) {
+                            const formFolderId = await drive.createFormFolder(formId, form.title);
+                            for (const f of questionFiles) {
+                                try {
+                                    const fileId = await drive.uploadFile(f.path, f.originalname || f.filename, formFolderId);
+                                    const link = await drive.getShareableLink(fileId);
+                                    driveLinks.push(link);
+                                } catch (e) {
+                                    console.error('Drive upload failed for', f.filename, e.message);
+                                }
+                            }
+                        }
+
+                        answerData.image_urls = JSON.stringify(drive && driveLinks.length ? driveLinks : localUrls);
+                        answerData.image_paths = JSON.stringify(localPaths);
                     }
 
                     // save selections too
@@ -165,14 +172,26 @@ router.post("/:formId/responses", upload.any(), async (req, res) => {
                         file.fieldname.startsWith(`file_${answer.fieldUid}_`)
                     );
 
-                    console.log(`Found ${questionFiles.length} regular files for question ${answer.fieldUid}`);
-
                     if (questionFiles.length > 0) {
-                        const fileUrls = questionFiles.map(f => `/uploads/${f.filename}`);
+                        const localUrls = questionFiles.map(f => `/uploads/${f.filename}`);                        
                         const filePaths = questionFiles.map(f => f.path);
 
+                        let driveLinks = [];
+                        if (drive) {
+                            const formFolderId = await drive.createFormFolder(formId, form.title);
+                            for (const f of questionFiles) {
+                                try {
+                                    const fileId = await drive.uploadFile(f.path, f.originalname || f.filename, formFolderId);
+                                    const link = await drive.getShareableLink(fileId);
+                                    driveLinks.push(link);
+                                } catch (e) {
+                                    console.error('Drive upload failed for', f.filename, e.message);
+                                }
+                            }
+                        }
+
                         answerData.file_paths = JSON.stringify(filePaths);
-                        answerData.answer_text = JSON.stringify(fileUrls);
+                        answerData.answer_text = JSON.stringify(drive && driveLinks.length ? driveLinks : localUrls);
                     }
 
                 } else if (Array.isArray(answer.text)) {
@@ -186,14 +205,10 @@ router.post("/:formId/responses", upload.any(), async (req, res) => {
 
                 const savedAnswer = await Answer.create(answerData);
                 processedAnswers.push(savedAnswer);
-                console.log(`Successfully saved answer for question ${answer.fieldUid}`);
             } catch (error) {
                 console.error(`Error processing answer for question ${answer.fieldUid}:`, error);
             }
         }
-
-        console.log("Answers processed: ", processedAnswers);
-        console.log(`Total answers processed: ${processedAnswers.length}`);
 
         return res.status(201).json({
             message: "回答が正常に送信されました",
@@ -397,4 +412,4 @@ router.get("/:formId/responses", auth, async (req, res) => {
 //     }
 // });
 
-// module.exports = router;
+module.exports = router;

@@ -60,10 +60,7 @@ router.post("/login", async (req, res) => {
 
         const user = await User.findOne({ where: { email } });
         if (!user) return res.status(404).json({ message: "ユーザーが見つかりません" });
-
-        console.log(password, user.password);
         const isMatch = await bcrypt.compare(password, user.password);
-        console.log(isMatch);
         if (!isMatch) return res.status(400).json({ message: "メールアドレスまたはパスワードが正しくありません" });
 
         const token = jwt.sign(

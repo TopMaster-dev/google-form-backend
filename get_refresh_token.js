@@ -24,8 +24,6 @@ const authUrl = oauth2Client.generateAuthUrl({
     prompt: 'consent'            // 👈 Ensures refresh token is returned
 });
 
-console.log('\n🔗 Open this URL in your browser to authorize:\n\n', authUrl, '\n');
-
 open(authUrl); // Opens browser automatically
 
 const rl = readline.createInterface({
@@ -36,7 +34,6 @@ const rl = readline.createInterface({
 rl.question('📥 Paste the code from the browser here: ', async (code) => {
     try {
         const { tokens } = await oauth2Client.getToken(code);
-        console.log('\n✅ Your Refresh Token:\n\n', tokens.refresh_token, '\n');
         rl.close();
     } catch (err) {
         console.error('❌ Error fetching token:', err.message);

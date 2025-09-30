@@ -1,4 +1,5 @@
 node_modules/
+google-drive-key.json*
 # Logs
 logs
 *.log
