@@ -389,108 +389,12 @@ router.get("/:formId/responses", auth, async (req, res) => {
 });
 
 // Export responses as CSV
-router.get("/:formId/csv", auth, async (req, res) => {
-    try {
-        const { formId } = req.params;
+// router.get("/csv", async (req, res) => {
+//     try {
+        
+//     } catch (err) {
 
-        // Check permissions
-        const form = await Form.findByPk(formId);
-        if (!form) {
-            return res.status(404).json({ message: "フォームが見つかりませんでした" });
-        }
+//     }
+// });
 
-        if (req.user.id !== form.created_by && req.user.role !== "admin") {
-            return res.status(403).json({ message: "許可されていません" });
-        }
-
-        // Get all responses
-        const responses = await Response.findAll({
-            where: { form_id: formId },
-            include: [
-                { model: User, attributes: ['name', 'email'], required: false },
-                {
-                    model: Answer,
-                    include: [{
-                        model: Question,
-                        attributes: ['question_text', 'question_type']
-                    }]
-                }
-            ],
-            order: [['created_at', 'DESC']]
-        });
-
-        // Get all questions for headers
-        const questions = await Question.findAll({
-            where: { form_id: formId },
-            order: [['id', 'ASC']]
-        });
-
-        // Create CSV headers
-        const headers = ['Submission ID', 'Submitted At', 'Respondent Name', 'Respondent Email']
-            .concat(questions.map(q => q.question_text));
-
-        // Create CSV rows
-        const rows = responses.map(response => {
-            const baseData = {
-                id: response.id,
-                submittedAt: response.submitted_at,
-                respondentName: response.User ? response.User.name : 'Anonymous',
-                respondentEmail: response.User ? response.User.email : (response.respondent_email || 'N/A')
-            };
-
-            // Add answers in the correct order
-            const answerMap = {};
-            response.Answers.forEach(answer => {
-                let displayValue = '';
-
-                try {
-                    const parsedValue = JSON.parse(answer.value || '{}');
-
-                    if (parsedValue.fileUrls && parsedValue.fileUrls.length > 0) {
-                        displayValue = parsedValue.fileUrls.join(', ');
-                    } else if (Array.isArray(parsedValue)) {
-                        displayValue = parsedValue.join(', ');
-                    } else if (parsedValue.text) {
-                        displayValue = parsedValue.text;
-                    } else {
-                        displayValue = answer.value || '';
-                    }
-                } catch (e) {
-                    displayValue = answer.value || '';
-                }
-
-                answerMap[answer.question_id] = displayValue || 'No response';
-            });
-
-            // Add answers in the same order as questions
-            const answers = questions.map(q => answerMap[q.id] || 'No response');
-
-            return [
-                baseData.id,
-                baseData.submittedAt,
-                baseData.respondentName,
-                baseData.respondentEmail,
-                ...answers
-            ];
-        });
-
-        // Generate CSV content
-        const csvContent = [
-            headers.join(','),
-            ...rows.map(row => row.map(cell =>
-                cell ? `"${String(cell).replace(/"/g, '""')}"` : '""'
-            ).join(','))
-        ].join('\n');
-
-        // Set headers for CSV download
-        res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', `attachment; filename=form_responses_${formId}.csv`);
-
-        return res.send(csvContent);
-    } catch (err) {
-        console.error('Error generating CSV:', err);
-        return res.status(500).json({ error: err.message });
-    }
-});
-
-module.exports = router;
+// module.exports = router;
