@@ -4,8 +4,14 @@ const path = require("path");
 const fs = require("fs");
 const auth = require("../middleware/authMiddleware");
 const { Form, Question } = require("../models");
+const { getFiles, createFile, deleteFile, renameFile } = require('../googleDrive');
 
 const router = express.Router();
+const categoryList = [
+    'オープニングムービー',
+    'プロフィールムービ',
+    'エンドロール・レタームービーその他'
+]
 
 // Helper to parse JSON fields safely
 const parseJSON = (value) => {
@@ -173,6 +179,11 @@ router.post("/", auth, async (req, res) => {
             include: Question
         });
 
+        if(category_id) {
+            folderName = categoryList[category_id - 1] + '(' + title + ')';
+            const formFolderID = createFile(folderName, '1WTaQgtMOOprIRxJ0fyRc0ijcxfnjQZHk');
+        }
+
         return res.json({
             form: {
                 id: createdForm.id,
@@ -330,6 +341,16 @@ router.put("/:id", auth, async (req, res) => {
         const { title, description, fields, category_id } = req.body;
         const form = await Form.findByPk(req.params.id);
         if (!form) return res.status(404).json({ message: "フォームが見つかりませんでした" });
+        if(form.dataValues.category_id) {
+            const folderName = categoryList[form.dataValues.category_id - 1] + '(' + form.dataValues.title + ')';
+            const newFolderName = categoryList[category_id - 1] + '(' + title + ')';
+            const folderList = await getFiles();
+            folderList.forEach(element => {
+                if(element.name == folderName) {
+                    renameFile(element.id, newFolderName);
+                }
+            });
+        }
 
         form.title = title || form.title;
         form.category_id = category_id || form.category_id;
@@ -370,7 +391,6 @@ router.put("/:id", auth, async (req, res) => {
         }
 
         const updatedForm = await Form.findByPk(form.id, { include: Question });
-
         return res.json({
             form: {
                 id: updatedForm.id,
@@ -413,6 +433,16 @@ router.delete("/:id", auth, async (req, res) => {
         if (req.user.role !== "admin") return res.status(403).json({ message: "許可されていません" });
 
         const form = await Form.findByPk(req.params.id);
+        if(form.dataValues.category_id) {
+            const folderName = await categoryList[form.dataValues.category_id - 1] + '(' + form.dataValues.title + ')';
+            const folderList = await getFiles();        
+            folderList.forEach(element => {
+                if(element.name == folderName) {
+                    deleteFile(element.id);
+                }
+            });
+        }
+
         if (!form) return res.status(404).json({ message: "フォームが見つかりませんでした" });
 
         await form.destroy();

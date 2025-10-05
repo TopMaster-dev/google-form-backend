@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Path to your service account key file (downloaded from Google Cloud Console)
-const KEYFILEPATH = path.join(__dirname, '../credentials.json');
+const KEYFILEPATH = path.join(__dirname, './credentials.json');
 
 // Scopes for Google Drive
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
@@ -47,7 +47,7 @@ async function getFiles() {
   }
 }
 
-async function createFolder(folderName, parentFolderId = null) {
+async function createFile(folderName, parentFolderId = null) {
 
   const fileMetadata = {
     name: folderName,
@@ -70,11 +70,31 @@ async function deleteFile(fileId) {
   await driveService.files.delete({ fileId });
 }
 
+async function renameFile(fileId, newName) {
+
+  try {
+    const response = await driveService.files.update({
+      fileId,
+      requestBody: {
+        name: newName,
+      },
+      fields: "id, name",
+    });
+
+    console.log(`✅ Renamed item: ${response.data.name} (${response.data.id})`);
+    return response.data;
+  } catch (err) {
+    console.error("❌ Error renaming item:", err.message);
+    return null;
+  }
+}
+
 
 module.exports = {
   getFiles,
-  createFolder,
-  deleteFile
+  createFile,
+  deleteFile,
+  renameFile
 };
 
 // async function uploadFile(auth, filePath, folderId) {
