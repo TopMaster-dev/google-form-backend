@@ -9,19 +9,25 @@ const KEYFILEPATH = path.join(__dirname, './credentials.json');
 // Scopes for Google Drive
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
-// Load service account credentials
-const auth = new google.auth.GoogleAuth({
-  keyFile: KEYFILEPATH,
-  scopes: SCOPES,
-});
+async function getDriveClient() {
+  const auth = new google.auth.GoogleAuth({
+    keyFile: KEYFILEPATH,
+    scopes: SCOPES,
+  });
+  
+  // Create Drive API client
+  const drive = google.drive({ version: 'v3', auth });
+  return drive;
+}
 
-// Create Drive API client
-const driveService = google.drive({ version: 'v3', auth });
+// Load service account credentials
 
 /**
  * List first 5 files in Google Drive
  */
 async function getFiles() {
+  const driveService = await getDriveClient();
+
   try {
     const response = await driveService.files.list({
       pageSize: 5,
@@ -48,6 +54,7 @@ async function getFiles() {
 }
 
 async function createFile(folderName, parentFolderId = null) {
+  const driveService = await getDriveClient();
 
   const fileMetadata = {
     name: folderName,
@@ -67,10 +74,13 @@ async function createFile(folderName, parentFolderId = null) {
 }
 
 async function deleteFile(fileId) {
+  const driveService = await getDriveClient();
+
   await driveService.files.delete({ fileId });
 }
 
 async function renameFile(fileId, newName) {
+  const driveService = await getDriveClient();
 
   try {
     const response = await driveService.files.update({
@@ -89,12 +99,39 @@ async function renameFile(fileId, newName) {
   }
 }
 
+async function uploadFile(filePath, originalName, folderId) {
+  const driveService = await getDriveClient();
+  try {
+    const fileMetadata = {
+      name: originalName,
+      parents: [folderId],
+    };
+    
+    const media = {
+      body: fs.createReadStream(filePath),
+    };
+    console.log(folderId, '00000000000000');
+  
+    const file = await driveService.files.create({
+      resource: fileMetadata,
+      media: media,
+      fields: "id",
+    });
+    console.log(file);
+    
+    return file.data.id;
+  } catch (error) {
+    console.error("❌ Error renaming item:", err.message);
+    return null;
+  }
+}
 
 module.exports = {
   getFiles,
   createFile,
   deleteFile,
-  renameFile
+  renameFile,
+  uploadFile
 };
 
 // async function uploadFile(auth, filePath, folderId) {
