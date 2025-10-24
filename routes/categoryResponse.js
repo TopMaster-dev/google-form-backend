@@ -92,6 +92,7 @@ router.post("/general", async (req, res) => {
         type: q.question_type,
         required: q.required,
         placeholder: q.placeholder || "",
+        text_number: Number(q.text_number) || 0,
         options: parseJSON(q.options),
         content: q.content || null,
         max_images: q.max_images || 1,

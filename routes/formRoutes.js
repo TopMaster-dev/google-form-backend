@@ -155,6 +155,7 @@ router.post("/", auth, async (req, res) => {
                     question_type: field.type,
                     required: field.required,
                     placeholder: field.placeholder || '',  // Save placeholder
+                    text_number: Number(field.text_number) || 0,  // Save placeholder
                     options: field.options ? JSON.stringify(field.options) : null,
                     content: field.content,
                     max_images: field.max_images || 1,
@@ -190,6 +191,7 @@ router.post("/", auth, async (req, res) => {
                     type: q.question_type,
                     required: q.required,
                     placeholder: q.placeholder,
+                    text_number: Number(q.text_number) || 0,
                     options: parseJSON(q.options),
                     content: q.content,
                     max_images: q.max_images,
@@ -238,6 +240,7 @@ router.get("/:formId/public", async (req, res) => {
                 type: q.question_type,
                 required: q.required,
                 placeholder: q.placeholder || "",
+                text_number: Number(q.text_number) || 0,
                 options: parseJSON(q.options),
                 content: q.content || null,
                 max_images: q.max_images || 1,
@@ -302,6 +305,7 @@ router.get("/:id", auth, async (req, res) => {
                     type: q.question_type,
                     required: q.required,
                     placeholder: q.placeholder || "",
+                    text_number: Number(q.text_number) || 0,
                     options: parseJSON(q.options),
                     content: q.content || "",
                     max_images: q.max_images,
@@ -352,6 +356,7 @@ router.put("/:id", auth, async (req, res) => {
                     question_type: field.type,
                     required: field.required,
                     placeholder: field.placeholder || '',  // Save placeholder
+                    text_number: Number(field.text_number) || 0,  // Save placeholder
                     options: field.options ? JSON.stringify(field.options) : null,
                     content: field.content,
                     max_images: field.max_images || 1,
@@ -385,6 +390,7 @@ router.put("/:id", auth, async (req, res) => {
                     type: q.question_type,
                     required: q.required,
                     placeholder: q.placeholder,
+                    text_number: Number(q.text_number) || 0,
                     options: parseJSON(q.options),
                     content: q.content,
                     max_images: q.max_images,

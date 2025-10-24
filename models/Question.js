@@ -28,6 +28,7 @@ const Question = sequelize.define("Question", {
     required: { type: DataTypes.BOOLEAN, defaultValue: true },
     image_only: { type: DataTypes.BOOLEAN, defaultValue: false },
     placeholder: { type: DataTypes.STRING, allowNull: true },
+    text_number: { type: DataTypes.INTEGER, allowNull: true },
     max_images: { type: DataTypes.INTEGER, defaultValue: 1, allowNull: false },
 
     enable_checkboxes: { type: DataTypes.BOOLEAN, defaultValue: false },
