@@ -139,37 +139,11 @@ router.post("/:formId/responses", upload.any(), async (req, res) => {
                 if (answer.type === "image_upload") {
                     const questionFiles = uploadedFiles.filter(file =>
                         file.fieldname.startsWith(`image_${answer.fieldUid}_`)
-                    );
-                    console.log(questionFiles, '------------------------');
-                    
+                    );                   
 
                     if (questionFiles.length > 0) {
                         const localUrls = questionFiles.map(f => `/uploads/${f.filename}`);
                         const localPaths = questionFiles.map(f => f.path);
-                        const folderList = await getFiles();
-                        let folderParentId = '';
-                        let formfolderId = '';
-                        const parentName = categoryList[form.dataValues.category_id - 1] + '(' + form.dataValues.title + ')';
-                        folderList.forEach(element => {
-                            if(element.name == user_info.dataValues.name) {
-                                folderParentId = element.id;
-                            } else {
-                                if(element.name == parentName) {
-                                    formfolderId = element.id
-                                }
-                            }
-                        });
-                        if(folderParentId == '') {
-                            folderParentId = await createFile(user_info.dataValues.name, formfolderId)
-                        }
-                        for (const f of questionFiles) {
-                            try {
-                                const fileId = await uploadFile(f.path, f.originalname || f.filename, folderParentId);
-                            } catch (e) {
-                                console.error('Drive upload failed for', f.filename, e.message);
-                            }
-                        }
-
                         answerData.image_urls = JSON.stringify(localUrls);
                         answerData.image_paths = JSON.stringify(localPaths);
                     }
@@ -186,18 +160,6 @@ router.post("/:formId/responses", upload.any(), async (req, res) => {
                     if (questionFiles.length > 0) {
                         const localUrls = questionFiles.map(f => `/uploads/${f.filename}`);                        
                         const filePaths = questionFiles.map(f => f.path);
-
-                        // const formFolderId = await drive.createFormFolder(formId, form.title);
-                        // for (const f of questionFiles) {
-                        //     try {
-                        //         const fileId = await drive.uploadFile(f.path, f.originalname || f.filename, formFolderId);
-                        //         const link = await drive.getShareableLink(fileId);
-                        //         driveLinks.push(link);
-                        //     } catch (e) {
-                        //         console.error('Drive upload failed for', f.filename, e.message);
-                        //     }
-                        // }
-
                         answerData.file_paths = JSON.stringify(filePaths);
                         answerData.answer_text = JSON.stringify(localUrls);
                     }
@@ -402,7 +364,7 @@ router.get("/:formId/responses", auth, async (req, res) => {
             form: r.Form
                 ?{ title: r.Form.title, description: r.Form.description }
                 :{ title: '無題のフォーム', email: 'フォームの説明' }
-        }));
+        }));      
 
         return res.json(formattedResponses);
     } catch (err) {

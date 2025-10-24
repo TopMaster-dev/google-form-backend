@@ -33,22 +33,16 @@ async function getFiles() {
       pageSize: 5,
       fields: 'files(id, name)',
     });
-    console.log('Response:', response);
     const files = response.data.files;
-    console.log('Files:', files);
     if (files.length === 0) {
-      console.log('No files found.');
       return [];
     }
 
-    console.log('Files:');
     files.forEach((file) => {
-      console.log(`${file.name} (${file.id})`);
     });
 
     return files;
   } catch (err) {
-    console.error('Error listing files:', err);
     throw err;
   }
 }
@@ -91,7 +85,6 @@ async function renameFile(fileId, newName) {
       fields: "id, name",
     });
 
-    console.log(`✅ Renamed item: ${response.data.name} (${response.data.id})`);
     return response.data;
   } catch (err) {
     console.error("❌ Error renaming item:", err.message);
@@ -110,14 +103,12 @@ async function uploadFile(filePath, originalName, folderId) {
     const media = {
       body: fs.createReadStream(filePath),
     };
-    console.log(folderId, '00000000000000');
   
     const file = await driveService.files.create({
       resource: fileMetadata,
       media: media,
       fields: "id",
     });
-    console.log(file);
     
     return file.data.id;
   } catch (error) {
@@ -153,14 +144,12 @@ module.exports = {
 //       fields: 'id'
 //   });
 
-//   console.log('File uploaded. File ID:', response.data.id);
 //   return response.data;
 // }
 
 // async function deleteFile(auth, fileId) {
 //   const drive = google.drive({ version: 'v3', auth });
 //   await drive.files.delete({ fileId });
-//   console.log('File deleted successfully.');
 // }
 
 // async function updateFile(auth, fileId, filePath) {
@@ -182,6 +171,5 @@ module.exports = {
 //       fields: 'id'
 //   });
 
-//   console.log('File updated successfully. File ID:', response.data.id);
 //   return response.data;
 // }

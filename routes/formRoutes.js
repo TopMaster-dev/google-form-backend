@@ -145,7 +145,7 @@ router.post("/", auth, async (req, res) => {
             description,
             created_by: req.user.id,   // match your schema
             category_id
-        });
+        });    
 
         if (fields && fields.length > 0) {
             for (const field of fields) {
@@ -178,11 +178,6 @@ router.post("/", auth, async (req, res) => {
         const createdForm = await Form.findByPk(form.id, {
             include: Question
         });
-
-        if(category_id) {
-            folderName = categoryList[category_id - 1] + '(' + title + ')';
-            const formFolderID = createFile(folderName, '1WTaQgtMOOprIRxJ0fyRc0ijcxfnjQZHk');
-        }
 
         return res.json({
             form: {
@@ -341,51 +336,38 @@ router.put("/:id", auth, async (req, res) => {
         const { title, description, fields, category_id } = req.body;
         const form = await Form.findByPk(req.params.id);
         if (!form) return res.status(404).json({ message: "フォームが見つかりませんでした" });
-        if(form.dataValues.category_id) {
-            const folderName = categoryList[form.dataValues.category_id - 1] + '(' + form.dataValues.title + ')';
-            const newFolderName = categoryList[category_id - 1] + '(' + title + ')';
-            const folderList = await getFiles();
-            folderList.forEach(element => {
-                if(element.name == folderName) {
-                    renameFile(element.id, newFolderName);
-                }
-            });
-        }
-
+        
         form.title = title || form.title;
         form.category_id = category_id || form.category_id;
         form.description = description || form.description;
         await form.save();
 
         await Question.destroy({ where: { form_id: form.id } });
-
+        
         if (fields && fields.length > 0) {
             for (const field of fields) {
                 await Question.create({
                     form_id: form.id,
-                    question_text: field.label,
+                    question_text: field.label,   // schema mapping
                     question_type: field.type,
                     required: field.required,
-                    placeholder: field.placeholder || null,
+                    placeholder: field.placeholder || '',  // Save placeholder
                     options: field.options ? JSON.stringify(field.options) : null,
-                    content: field.content || null,
+                    content: field.content,
                     max_images: field.max_images || 1,
-                    checkbox_options: field.checkbox_options
-                        ? JSON.stringify(field.checkbox_options)
-                        : null,
-                    choice_question: field.choice_question || null,
-                    choice_options: field.choice_options
-                        ? JSON.stringify(field.choice_options)
-                        : null,
+                    checkbox_options: field.checkbox_options ? JSON.stringify(field.checkbox_options) : null,
+                    choice_question: field.choice_question,
+                    choice_options: field.choice_options ? JSON.stringify(field.choice_options) : null,
                     image_only: field.image_only || false,
+                    max_images: field.max_images || 1,
                     enable_checkboxes: field.enable_checkboxes || false,
                     enable_multiple_choice: field.enable_multiple_choice || false,
-                    multiple_choice_label: field.multiple_choice_label || null,
-                    multiple_choice_options: field.multiple_choice_options
-                        ? JSON.stringify(field.multiple_choice_options)
-                        : null,
+                    multiple_choice_label: field.multiple_choice_label,
+                    multiple_choice_options: field.multiple_choice_options ? JSON.stringify(field.multiple_choice_options) : null,
+                    max_images: field.max_images || 1,
                     image_options: field.image_options ? JSON.stringify(field.image_options) : null,
-                    extra: field.extra || null,
+                    admin_images: field.adminImages ? JSON.stringify(field.adminImages) : "[]",
+                    enable_admin_images: field.enableAdminImages || false
                 });
             }
         }
@@ -433,16 +415,6 @@ router.delete("/:id", auth, async (req, res) => {
         if (req.user.role !== "admin") return res.status(403).json({ message: "許可されていません" });
 
         const form = await Form.findByPk(req.params.id);
-        if(form.dataValues.category_id) {
-            const folderName = await categoryList[form.dataValues.category_id - 1] + '(' + form.dataValues.title + ')';
-            const folderList = await getFiles();        
-            folderList.forEach(element => {
-                if(element.name == folderName) {
-                    deleteFile(element.id);
-                }
-            });
-        }
-
         if (!form) return res.status(404).json({ message: "フォームが見つかりませんでした" });
 
         await form.destroy();
