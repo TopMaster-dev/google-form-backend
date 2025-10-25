@@ -146,7 +146,7 @@ router.post("/", auth, async (req, res) => {
             created_by: req.user.id,   // match your schema
             category_id
         });    
-
+        
         if (fields && fields.length > 0) {
             for (const field of fields) {
                 await Question.create({

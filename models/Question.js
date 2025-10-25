@@ -18,7 +18,8 @@ const Question = sequelize.define("Question", {
             "file_upload",
             "image",
             "image_upload",
-            "section"
+            "section",
+            "title"
         ),
         allowNull: false
     },
