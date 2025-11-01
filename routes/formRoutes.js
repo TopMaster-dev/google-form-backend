@@ -155,6 +155,7 @@ router.post("/", auth, async (req, res) => {
                     question_type: field.type,
                     required: field.required,
                     placeholder: field.placeholder || '',  // Save placeholder
+                    ex_placeholder: field.ex_placeholder || '',  // Save placeholder
                     text_number: Number(field.text_number) || 0,  // Save placeholder
                     options: field.options ? JSON.stringify(field.options) : null,
                     content: field.content,
@@ -191,6 +192,7 @@ router.post("/", auth, async (req, res) => {
                     type: q.question_type,
                     required: q.required,
                     placeholder: q.placeholder,
+                    ex_placeholder: q.ex_placeholder,
                     text_number: Number(q.text_number) || 0,
                     options: parseJSON(q.options),
                     content: q.content,
@@ -240,6 +242,7 @@ router.get("/:formId/public", async (req, res) => {
                 type: q.question_type,
                 required: q.required,
                 placeholder: q.placeholder || "",
+                ex_placeholder: q.ex_placeholder || "",
                 text_number: Number(q.text_number) || 0,
                 options: parseJSON(q.options),
                 content: q.content || null,
@@ -305,6 +308,7 @@ router.get("/:id", auth, async (req, res) => {
                     type: q.question_type,
                     required: q.required,
                     placeholder: q.placeholder || "",
+                    ex_placeholder: q.ex_placeholder || "",
                     text_number: Number(q.text_number) || 0,
                     options: parseJSON(q.options),
                     content: q.content || "",
@@ -356,6 +360,7 @@ router.put("/:id", auth, async (req, res) => {
                     question_type: field.type,
                     required: field.required,
                     placeholder: field.placeholder || '',  // Save placeholder
+                    ex_placeholder: field.ex_placeholder || '',  // Save placeholder
                     text_number: Number(field.text_number) || 0,  // Save placeholder
                     options: field.options ? JSON.stringify(field.options) : null,
                     content: field.content,
@@ -390,6 +395,7 @@ router.put("/:id", auth, async (req, res) => {
                     type: q.question_type,
                     required: q.required,
                     placeholder: q.placeholder,
+                    ex_placeholder: q.ex_placeholder,
                     text_number: Number(q.text_number) || 0,
                     options: parseJSON(q.options),
                     content: q.content,
