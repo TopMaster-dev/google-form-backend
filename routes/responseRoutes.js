@@ -228,7 +228,7 @@ router.get("/:formId/responses", auth, async (req, res) => {
                     },
                     {
                         model: Form,
-                        attributes: ['id', 'title', 'description'],
+                        attributes: ['id', 'title', 'description', 'video_url'],
                         required: false
                     },
                 ],
@@ -260,7 +260,7 @@ router.get("/:formId/responses", auth, async (req, res) => {
                     },
                     {
                         model: Form,
-                        attributes: ['id', 'title', 'description'],
+                        attributes: ['id', 'title', 'description', 'video_url'],
                         required: false
                     },
                 ],
@@ -285,7 +285,7 @@ router.get("/:formId/responses", auth, async (req, res) => {
                 imageResponses: a.image_responses ? JSON.parse(a.image_responses) : null
             })),
             form: r.Form
-                ?{ title: r.Form.title, description: r.Form.description }
+                ?{ title: r.Form.title, description: r.Form.description, video_url: r.Form.video_url }
                 :{ title: '無題のフォーム', email: 'フォームの説明' }
         }));      
 

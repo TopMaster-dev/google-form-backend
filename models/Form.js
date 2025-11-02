@@ -5,6 +5,7 @@ const Form = sequelize.define("Form", {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     title: { type: DataTypes.STRING, allowNull: false },
     description: { type: DataTypes.TEXT },
+    video_url: { type: DataTypes.TEXT, allowNull: true },
     created_by: { type: DataTypes.INTEGER, allowNull: false },
     created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     allow_multiple_responses: { type: DataTypes.BOOLEAN, defaultValue: true },

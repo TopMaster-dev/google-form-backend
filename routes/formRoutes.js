@@ -138,11 +138,12 @@ router.post("/", auth, async (req, res) => {
         if (req.user.role !== "admin")
             return res.status(403).json({ message: "許可されていません" });
 
-        const { title, description, fields, category_id } = req.body;
+        const { title, description, fields, category_id, video_url } = req.body;
 
         const form = await Form.create({
             title,
             description,
+            video_url,
             created_by: req.user.id,   // match your schema
             category_id
         });    
@@ -186,6 +187,7 @@ router.post("/", auth, async (req, res) => {
                 id: createdForm.id,
                 title: createdForm.title,
                 description: createdForm.description,
+                video_url: createdForm.video_url,
                 fields: createdForm.Questions.map((q) => ({
                     id: q.id,
                     label: q.question_text,
@@ -224,7 +226,7 @@ router.get("/:formId/public", async (req, res) => {
     try {
         const form = await Form.findByPk(req.params.formId, {
             include: [Question],
-            attributes: ['id', 'title', 'description']
+            attributes: ['id', 'title', 'description', 'video_url']
         });
 
         if (!form) {
@@ -236,6 +238,7 @@ router.get("/:formId/public", async (req, res) => {
             id: form.id,
             title: form.title,
             description: form.description,
+            video_url: form.video_url,
             fields: form.Questions.map((q) => ({
                 uid: q.id,
                 label: q.question_text,
@@ -280,6 +283,7 @@ router.get("/", auth, async (req, res) => {
                 id: f.id,
                 title: f.title,
                 description: f.description,
+                video_url: f.video_url,
                 created_at: f.created_at,
                 created_by: f.created_by
             }))
@@ -301,6 +305,7 @@ router.get("/:id", auth, async (req, res) => {
                 id: form.id,
                 title: form.title,
                 description: form.description,
+                video_url: form.video_url,
                 category_id: form.category_id,
                 fields: form.Questions.map((q) => ({
                     id: q.id,
@@ -341,13 +346,14 @@ router.put("/:id", auth, async (req, res) => {
         if (req.user.role !== "admin")
             return res.status(403).json({ message: "許可されていません" });
 
-        const { title, description, fields, category_id } = req.body;
+        const { title, description, fields, category_id, video_url } = req.body;
         const form = await Form.findByPk(req.params.id);
         if (!form) return res.status(404).json({ message: "フォームが見つかりませんでした" });
         
         form.title = title || form.title;
         form.category_id = category_id || form.category_id;
         form.description = description || form.description;
+        form.video_url = video_url || form.video_url;
         await form.save();
 
         await Question.destroy({ where: { form_id: form.id } });
@@ -388,6 +394,7 @@ router.put("/:id", auth, async (req, res) => {
                 id: updatedForm.id,
                 title: updatedForm.title,
                 description: updatedForm.description,
+                video_url: updatedForm.video_url,
                 category_id: updatedForm.category_id,
                 fields: updatedForm.Questions.map((q) => ({
                     id: q.id,
